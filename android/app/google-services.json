@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "831896952732",
+    "project_id": "mq-marketplace",
+    "storage_bucket": "mq-marketplace.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:831896952732:android:70899e92b1fc1934b97259",
+        "android_client_info": {
+          "package_name": "com.macquarie.ethan.mq_marketplace"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBHQvQmuX00RUNC6RGZU281bYjLR5uT4sI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
