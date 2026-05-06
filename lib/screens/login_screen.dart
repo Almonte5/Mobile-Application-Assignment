@@ -47,20 +47,20 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text( // Widget 1
+                Text(
+                  // Widget 1
                   'MQ Marketplace',
                   style: Theme.of(context).textTheme.headlineMedium,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 32), // Widget 2
-                TextFormField( // Widget 3
+                TextFormField(
+                  // Widget 3
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
                   decoration: const InputDecoration(
-                    labelText: 'Email',
-                    border: OutlineInputBorder()
-                  ),
-                  validator: (value){
+                      labelText: 'Email', border: OutlineInputBorder()),
+                  validator: (value) {
                     if (value == null || value.trim().isEmpty) {
                       return 'Please enter your email';
                     }
@@ -71,7 +71,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   },
                 ),
                 const SizedBox(height: 16), // widget 4
-                TextFormField( // widget 5
+                TextFormField(
+                  // widget 5
                   controller: _passwordController,
                   obscureText: true,
                   decoration: const InputDecoration(
@@ -88,17 +89,16 @@ class _LoginScreenState extends State<LoginScreen> {
                     return null;
                   },
                 ),
-                const SizedBox(height:24), //widget 6
+                const SizedBox(height: 24), //widget 6
                 ElevatedButton(
-                  onPressed: _isLoading ? null : _onLoginPressed,
-                  child: _isLoading
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Text('Log In')
-                ),
+                    onPressed: _isLoading ? null : _onLoginPressed,
+                    child: _isLoading
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Text('Log In')),
                 const SizedBox(height: 16),
                 TextButton(
                   onPressed: _goToSignUp,
