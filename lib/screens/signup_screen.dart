@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mq_marketplace/services/auth_service.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -16,6 +17,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final _confirmPasswordController = TextEditingController();
 
   bool _isLoading = false;
+  final _authService = AuthService();
 
   @override
   void dispose() {
@@ -26,9 +28,25 @@ class _SignUpScreenState extends State<SignUpScreen> {
     super.dispose();
   }
 
-  void _onSignUpPressed() {
-    if (_formKey.currentState!.validate()) {
-      debugPrint('Signup form valid: ${_emailController.text}');
+  Future<void> _onSignUpPressed() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _isLoading = true);
+    try {
+      await _authService.signUp(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+        displayName: _displayNameController.text.trim(),
+      );
+      if (!mounted) return;
+      Navigator.of(context).pop();
+    } on AuthException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.message)),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -46,22 +64,22 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   TextFormField(
-                      controller: _displayNameController,
-                      decoration: const InputDecoration(
-                          labelText: 'Display Name',
-                          border: OutlineInputBorder()),
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Please enter a display name';
-                        }
-                        if (value.length < 2) {
-                          return 'Display name must be at least 2 characters';
-                        }
-                        return null;
-                      }),
+                    controller: _displayNameController,
+                    decoration: const InputDecoration(
+                        labelText: 'Display Name',
+                        border: OutlineInputBorder()),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Please enter a display name';
+                      }
+                      if (value.length < 2) {
+                        return 'Display name must be at least 2 characters';
+                      }
+                      return null;
+                    },
+                  ),
                   const SizedBox(height: 16),
                   TextFormField(
-                    // Widget 3
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
                     decoration: const InputDecoration(
@@ -72,6 +90,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       }
                       if (!value.contains('@')) {
                         return 'Please enter a valid email';
+                      }
+                      if (!value.toLowerCase().endsWith('@students.mq.edu.au') &&
+                          !value.toLowerCase().endsWith('@mq.edu.au')) {
+                        return 'Please use your MQ email address';
                       }
                       return null;
                     },
@@ -94,6 +116,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       return null;
                     },
                   ),
+                  const SizedBox(height: 16),
                   TextFormField(
                     controller: _confirmPasswordController,
                     obscureText: true,
@@ -113,18 +136,20 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   ),
                   const SizedBox(height: 24),
                   ElevatedButton(
-                      onPressed: _isLoading ? null : _onSignUpPressed,
-                      child: _isLoading
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Text('Sign Up')),
+                    onPressed: _isLoading ? null : _onSignUpPressed,
+                    child: _isLoading
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Text('Sign Up'),
+                  ),
                   const SizedBox(height: 16),
                   TextButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: const Text("Already have an account? Log in"))
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text("Already have an account? Log in"),
+                  ),
                 ],
               ),
             ),
