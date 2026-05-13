@@ -3,6 +3,7 @@ import 'package:mq_marketplace/services/auth_service.dart';
 import 'package:mq_marketplace/services/listing_service.dart';
 import 'package:mq_marketplace/models/listing.dart';
 import 'package:mq_marketplace/widgets/listing_card.dart';
+import 'package:mq_marketplace/screens/new_listing_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -57,8 +58,9 @@ class HomeScreen extends StatelessWidget {
         },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-        },
+        onPressed: () => Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const NewListingScreen()),
+        ),
         child: const Icon(Icons.add),
       ),
     );
