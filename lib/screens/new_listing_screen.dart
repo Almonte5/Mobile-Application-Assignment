@@ -1,9 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:mq_marketplace/models/category.dart';
 import 'package:mq_marketplace/models/listing.dart';
 import 'package:mq_marketplace/models/listing_status.dart';
 import 'package:mq_marketplace/services/auth_service.dart';
+import 'package:mq_marketplace/services/image_upload_service.dart';
 import 'package:mq_marketplace/services/listing_service.dart';
 
 class NewListingScreen extends StatefulWidget {
@@ -20,10 +22,13 @@ class _NewListingScreenState extends State<NewListingScreen> {
   final _priceController = TextEditingController();
 
   Category _selectedCategory = Category.textbooks;
+  XFile? _pickedImage;
   bool _isLoading = false;
 
   final _authService = AuthService();
   final _listingService = ListingService();
+  final _imagePicker = ImagePicker();
+  final _imageUploadService = ImageUploadService();
 
   @override
   void dispose() {
@@ -31,6 +36,15 @@ class _NewListingScreenState extends State<NewListingScreen> {
     _descriptionController.dispose();
     _priceController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickImage() async {
+    final image = await _imagePicker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 1080,
+      imageQuality: 85,
+    );
+    if (image != null) setState(() => _pickedImage = image);
   }
 
   Future<void> _onSubmit() async {
@@ -42,12 +56,16 @@ class _NewListingScreenState extends State<NewListingScreen> {
       final user = _authService.currentUser;
       if (user == null) throw Exception('Not logged in');
 
-      // Fetch displayName from Firestore since it's not on the Auth user
       final userDoc = await FirebaseFirestore.instance
           .collection('users')
           .doc(user.uid)
           .get();
       final sellerName = userDoc.data()?['displayName'] as String? ?? 'Unknown';
+
+      String? imageUrl;
+      if (_pickedImage != null) {
+        imageUrl = await _imageUploadService.uploadImage(_pickedImage!);
+      }
 
       final now = DateTime.now();
       final listing = Listing(
@@ -58,6 +76,7 @@ class _NewListingScreenState extends State<NewListingScreen> {
         description: _descriptionController.text.trim(),
         price: double.parse(_priceController.text.trim()),
         category: _selectedCategory,
+        imageUrl: imageUrl,
         status: ListingStatus.available,
         createdAt: now,
         updatedAt: now,
@@ -70,7 +89,7 @@ class _NewListingScreenState extends State<NewListingScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Something went wrong. Please try again.')),
+        SnackBar(content: Text(e.toString())),
       );
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -89,6 +108,42 @@ class _NewListingScreenState extends State<NewListingScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                // Image picker
+                GestureDetector(
+                  onTap: _isLoading ? null : _pickImage,
+                  child: Container(
+                    height: 180,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: _pickedImage != null
+                        ? ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.network(
+                              _pickedImage!.path,
+                              fit: BoxFit.cover,
+                            ),
+                          )
+                        : const Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.add_a_photo_outlined,
+                                size: 40,
+                                color: Colors.grey,
+                              ),
+                              SizedBox(height: 8),
+                              Text(
+                                'Add Photo (optional)',
+                                style: TextStyle(color: Colors.grey),
+                              ),
+                            ],
+                          ),
+                  ),
+                ),
+                const SizedBox(height: 16),
                 TextFormField(
                   controller: _titleController,
                   decoration: const InputDecoration(
@@ -127,7 +182,8 @@ class _NewListingScreenState extends State<NewListingScreen> {
                     border: OutlineInputBorder(),
                     prefixText: '\$',
                   ),
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
                       return 'Please enter a price';
@@ -147,13 +203,17 @@ class _NewListingScreenState extends State<NewListingScreen> {
                     border: OutlineInputBorder(),
                   ),
                   items: Category.values
-                      .map((c) => DropdownMenuItem(
-                            value: c,
-                            child: Text(c.displayName),
-                          ))
+                      .map(
+                        (c) => DropdownMenuItem(
+                          value: c,
+                          child: Text(c.displayName),
+                        ),
+                      )
                       .toList(),
                   onChanged: (value) {
-                    if (value != null) setState(() => _selectedCategory = value);
+                    if (value != null) {
+                      setState(() => _selectedCategory = value);
+                    }
                   },
                 ),
                 const SizedBox(height: 24),
