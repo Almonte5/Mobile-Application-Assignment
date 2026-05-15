@@ -1,19 +1,65 @@
 import 'package:flutter/material.dart';
 import 'package:mq_marketplace/models/listing.dart';
-
+import 'package:mq_marketplace/screens/new_listing_screen.dart';
+import 'package:mq_marketplace/services/auth_service.dart';
+import 'package:mq_marketplace/services/listing_service.dart';
 
 class ListingDetailScreen extends StatelessWidget {
   const ListingDetailScreen({super.key, required this.listing});
 
   final Listing listing;
 
+  void _confirmDelete(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Remove listing?'),
+        content: const Text(
+          'This will mark your listing as sold and remove it from the feed.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.of(context).pop(); // close dialog
+              await ListingService().deleteListing(listing.id);
+              if (context.mounted) Navigator.of(context).pop(); // back to feed
+            },
+            child: const Text('Remove'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isOwner =
+        AuthService().currentUser?.uid == listing.sellerId;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Listing'),
+        actions: [
+          if (isOwner) ...[
+            IconButton(
+              icon: const Icon(Icons.edit_outlined),
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => NewListingScreen(listing: listing),
+                ),
+              ),
+            ),
+            IconButton(
+              icon: const Icon(Icons.delete_outline),
+              onPressed: () => _confirmDelete(context),
+            ),
+          ],
+        ],
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -78,7 +124,11 @@ class ListingDetailScreen extends StatelessWidget {
       height: 280,
       width: double.infinity,
       color: Colors.grey.shade200,
-      child: const Icon(Icons.image_not_supported, size: 64, color: Colors.grey),
+      child: const Icon(
+        Icons.image_not_supported,
+        size: 64,
+        color: Colors.grey,
+      ),
     );
   }
 
@@ -136,7 +186,7 @@ class ListingDetailScreen extends StatelessWidget {
   }
 
   void _contactSeller(BuildContext context) {
-    // TODO(day-10): wire up url_launcher mailto: once package is added
+    // TODO(day-13): wire up url_launcher mailto: once package is added
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Contact: ${listing.sellerName}'),

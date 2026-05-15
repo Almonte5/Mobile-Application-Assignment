@@ -9,7 +9,12 @@ import 'package:mq_marketplace/services/image_upload_service.dart';
 import 'package:mq_marketplace/services/listing_service.dart';
 
 class NewListingScreen extends StatefulWidget {
-  const NewListingScreen({super.key});
+  const NewListingScreen({super.key, this.listing});
+
+  /// If provided, the screen is in edit mode.
+  final Listing? listing;
+
+  bool get isEditing => listing != null;
 
   @override
   State<NewListingScreen> createState() => _NewListingScreenState();
@@ -21,7 +26,7 @@ class _NewListingScreenState extends State<NewListingScreen> {
   final _descriptionController = TextEditingController();
   final _priceController = TextEditingController();
 
-  Category _selectedCategory = Category.textbooks;
+  late Category _selectedCategory;
   XFile? _pickedImage;
   bool _isLoading = false;
 
@@ -29,6 +34,21 @@ class _NewListingScreenState extends State<NewListingScreen> {
   final _listingService = ListingService();
   final _imagePicker = ImagePicker();
   final _imageUploadService = ImageUploadService();
+
+  @override
+  void initState() {
+    super.initState();
+    // Pre-populate fields if editing
+    if (widget.isEditing) {
+      final l = widget.listing!;
+      _titleController.text = l.title;
+      _descriptionController.text = l.description;
+      _priceController.text = l.price.toString();
+      _selectedCategory = l.category;
+    } else {
+      _selectedCategory = Category.textbooks;
+    }
+  }
 
   @override
   void dispose() {
@@ -56,33 +76,52 @@ class _NewListingScreenState extends State<NewListingScreen> {
       final user = _authService.currentUser;
       if (user == null) throw Exception('Not logged in');
 
-      final userDoc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .get();
-      final sellerName = userDoc.data()?['displayName'] as String? ?? 'Unknown';
-
-      String? imageUrl;
+      // Upload new image if one was picked, otherwise keep existing URL
+      String? imageUrl = widget.listing?.imageUrl;
       if (_pickedImage != null) {
         imageUrl = await _imageUploadService.uploadImage(_pickedImage!);
       }
 
       final now = DateTime.now();
-      final listing = Listing(
-        id: '',
-        sellerId: user.uid,
-        sellerName: sellerName,
-        title: _titleController.text.trim(),
-        description: _descriptionController.text.trim(),
-        price: double.parse(_priceController.text.trim()),
-        category: _selectedCategory,
-        imageUrl: imageUrl,
-        status: ListingStatus.available,
-        createdAt: now,
-        updatedAt: now,
-      );
 
-      await _listingService.createListing(listing);
+      if (widget.isEditing) {
+        final updated = Listing(
+          id: widget.listing!.id,
+          sellerId: widget.listing!.sellerId,
+          sellerName: widget.listing!.sellerName,
+          title: _titleController.text.trim(),
+          description: _descriptionController.text.trim(),
+          price: double.parse(_priceController.text.trim()),
+          category: _selectedCategory,
+          imageUrl: imageUrl,
+          status: widget.listing!.status,
+          createdAt: widget.listing!.createdAt,
+          updatedAt: now,
+        );
+        await _listingService.updateListing(updated);
+      } else {
+        final userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .get();
+        final sellerName =
+            userDoc.data()?['displayName'] as String? ?? 'Unknown';
+
+        final listing = Listing(
+          id: '',
+          sellerId: user.uid,
+          sellerName: sellerName,
+          title: _titleController.text.trim(),
+          description: _descriptionController.text.trim(),
+          price: double.parse(_priceController.text.trim()),
+          category: _selectedCategory,
+          imageUrl: imageUrl,
+          status: ListingStatus.available,
+          createdAt: now,
+          updatedAt: now,
+        );
+        await _listingService.createListing(listing);
+      }
 
       if (!mounted) return;
       Navigator.of(context).pop();
@@ -99,7 +138,9 @@ class _NewListingScreenState extends State<NewListingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('New Listing')),
+      appBar: AppBar(
+        title: Text(widget.isEditing ? 'Edit Listing' : 'New Listing'),
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -108,7 +149,6 @@ class _NewListingScreenState extends State<NewListingScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Image picker
                 GestureDetector(
                   onTap: _isLoading ? null : _pickImage,
                   child: Container(
@@ -126,21 +166,29 @@ class _NewListingScreenState extends State<NewListingScreen> {
                               fit: BoxFit.cover,
                             ),
                           )
-                        : const Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.add_a_photo_outlined,
-                                size: 40,
-                                color: Colors.grey,
+                        : widget.listing?.imageUrl != null
+                            ? ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: Image.network(
+                                  widget.listing!.imageUrl!,
+                                  fit: BoxFit.cover,
+                                ),
+                              )
+                            : const Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.add_a_photo_outlined,
+                                    size: 40,
+                                    color: Colors.grey,
+                                  ),
+                                  SizedBox(height: 8),
+                                  Text(
+                                    'Add Photo (optional)',
+                                    style: TextStyle(color: Colors.grey),
+                                  ),
+                                ],
                               ),
-                              SizedBox(height: 8),
-                              Text(
-                                'Add Photo (optional)',
-                                style: TextStyle(color: Colors.grey),
-                              ),
-                            ],
-                          ),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -225,7 +273,7 @@ class _NewListingScreenState extends State<NewListingScreen> {
                           width: 20,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Text('Post Listing'),
+                      : Text(widget.isEditing ? 'Save Changes' : 'Post Listing'),
                 ),
               ],
             ),
