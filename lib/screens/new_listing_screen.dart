@@ -7,6 +7,7 @@ import 'package:mq_marketplace/models/listing_status.dart';
 import 'package:mq_marketplace/services/auth_service.dart';
 import 'package:mq_marketplace/services/image_upload_service.dart';
 import 'package:mq_marketplace/services/listing_service.dart';
+import 'package:mq_marketplace/services/location_service.dart';
 
 class NewListingScreen extends StatefulWidget {
   const NewListingScreen({super.key, this.listing});
@@ -34,11 +35,11 @@ class _NewListingScreenState extends State<NewListingScreen> {
   final _listingService = ListingService();
   final _imagePicker = ImagePicker();
   final _imageUploadService = ImageUploadService();
+  final _locationService = LocationService();
 
   @override
   void initState() {
     super.initState();
-    // Pre-populate fields if editing
     if (widget.isEditing) {
       final l = widget.listing!;
       _titleController.text = l.title;
@@ -82,6 +83,9 @@ class _NewListingScreenState extends State<NewListingScreen> {
         imageUrl = await _imageUploadService.uploadImage(_pickedImage!);
       }
 
+      // Capture location — optional, returns null if permission denied
+      final location = await _locationService.getCurrentLocation();
+
       final now = DateTime.now();
 
       if (widget.isEditing) {
@@ -94,6 +98,7 @@ class _NewListingScreenState extends State<NewListingScreen> {
           price: double.parse(_priceController.text.trim()),
           category: _selectedCategory,
           imageUrl: imageUrl,
+          location: location ?? widget.listing!.location,
           status: widget.listing!.status,
           createdAt: widget.listing!.createdAt,
           updatedAt: now,
@@ -116,6 +121,7 @@ class _NewListingScreenState extends State<NewListingScreen> {
           price: double.parse(_priceController.text.trim()),
           category: _selectedCategory,
           imageUrl: imageUrl,
+          location: location,
           status: ListingStatus.available,
           createdAt: now,
           updatedAt: now,
@@ -273,7 +279,9 @@ class _NewListingScreenState extends State<NewListingScreen> {
                           width: 20,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : Text(widget.isEditing ? 'Save Changes' : 'Post Listing'),
+                      : Text(
+                          widget.isEditing ? 'Save Changes' : 'Post Listing',
+                        ),
                 ),
               ],
             ),
