@@ -1,14 +1,30 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:mq_marketplace/models/listing.dart';
 import 'package:mq_marketplace/screens/listing_detail_screen.dart';
 
 class ListingCard extends StatelessWidget {
-  const ListingCard({super.key, required this.listing});
+  const ListingCard({super.key, required this.listing, this.userPosition});
 
   final Listing listing;
+  final Position? userPosition;
+
+  String? _distanceLabel() {
+    if (userPosition == null || listing.location == null) return null;
+    final metres = Geolocator.distanceBetween(
+      userPosition!.latitude,
+      userPosition!.longitude,
+      listing.location!.latitude,
+      listing.location!.longitude,
+    );
+    final km = metres / 1000;
+    return '${km.toStringAsFixed(1)} km away';
+  }
 
   @override
   Widget build(BuildContext context) {
+    final distance = _distanceLabel();
+
     return Card(
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -20,7 +36,6 @@ class ListingCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Image or placeholder
             AspectRatio(
               aspectRatio: 16 / 9,
               child: listing.imageUrl != null
@@ -49,7 +64,10 @@ class ListingCard extends StatelessWidget {
                       ),
                       Text(
                         '\$${listing.price.toStringAsFixed(2)}',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        style: Theme.of(context)
+                            .textTheme
+                            .titleMedium
+                            ?.copyWith(
                               color: Theme.of(context).colorScheme.primary,
                               fontWeight: FontWeight.bold,
                             ),
@@ -57,11 +75,28 @@ class ListingCard extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    '${listing.sellerName} · ${listing.category.displayName}',
-                    style: Theme.of(context).textTheme.bodySmall,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          '${listing.sellerName} · ${listing.category.displayName}',
+                          style: Theme.of(context).textTheme.bodySmall,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (distance != null)
+                        Text(
+                          distance,
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodySmall
+                              ?.copyWith(
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                        ),
+                    ],
                   ),
                 ],
               ),
