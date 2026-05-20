@@ -4,16 +4,24 @@ import 'package:mq_marketplace/models/listing.dart';
 import 'package:mq_marketplace/screens/listing_detail_screen.dart';
 
 class ListingCard extends StatelessWidget {
-  const ListingCard({super.key, required this.listing, this.userPosition});
+  const ListingCard({
+    super.key,
+    required this.listing,
+    this.userLat,
+    this.userLng,
+  });
 
   final Listing listing;
-  final Position? userPosition;
+  final double? userLat;
+  final double? userLng;
 
   String? _distanceLabel() {
-    if (userPosition == null || listing.location == null) return null;
+    if (userLat == null || userLng == null || listing.location == null) {
+      return null;
+    }
     final metres = Geolocator.distanceBetween(
-      userPosition!.latitude,
-      userPosition!.longitude,
+      userLat!,
+      userLng!,
       listing.location!.latitude,
       listing.location!.longitude,
     );

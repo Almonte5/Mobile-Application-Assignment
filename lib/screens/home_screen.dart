@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:mq_marketplace/models/listing.dart';
 import 'package:mq_marketplace/screens/new_listing_screen.dart';
 import 'package:mq_marketplace/services/auth_service.dart';
@@ -18,7 +17,8 @@ class _HomeScreenState extends State<HomeScreen> {
   final _listingService = ListingService();
   final _locationService = LocationService();
 
-  Position? _userPosition;
+  double? _userLat;
+  double? _userLng;
 
   @override
   void initState() {
@@ -30,18 +30,8 @@ class _HomeScreenState extends State<HomeScreen> {
     final geoPoint = await _locationService.getCurrentLocation();
     if (geoPoint != null && mounted) {
       setState(() {
-        _userPosition = Position(
-          latitude: geoPoint.latitude,
-          longitude: geoPoint.longitude,
-          timestamp: DateTime.now(),
-          accuracy: 0,
-          altitude: 0,
-          altitudeAccuracy: 0,
-          heading: 0,
-          headingAccuracy: 0,
-          speed: 0,
-          speedAccuracy: 0,
-        );
+        _userLat = geoPoint.latitude;
+        _userLng = geoPoint.longitude;
       });
     }
   }
@@ -87,7 +77,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 padding: const EdgeInsets.only(bottom: 12),
                 child: ListingCard(
                   listing: listings[index],
-                  userPosition: _userPosition,
+                  userLat: _userLat,
+                  userLng: _userLng,
                 ),
               );
             },
