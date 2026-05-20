@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:mq_marketplace/screens/auth_wrapper.dart';
 import 'firebase_options.dart';
+import 'package:mq_marketplace/utils/constants.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,7 +21,7 @@ class MQMarketplaceApp extends StatelessWidget {
       title: 'MQ Marketplace',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF8C1A4B)),
+        colorScheme: ColorScheme.fromSeed(seedColor: mqMaroon),
         useMaterial3: true,
       ),
       home: const AuthWrapper(),
