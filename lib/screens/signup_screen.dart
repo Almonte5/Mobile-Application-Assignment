@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:mq_marketplace/services/auth_service.dart';
 
 class SignUpScreen extends StatefulWidget {
-  const SignUpScreen({super.key});
+  const SignUpScreen({super.key, AuthService? authService})
+      : _authService = authService;
+
+  final AuthService? _authService;
 
   @override
   State<SignUpScreen> createState() => _SignUpScreenState();
@@ -17,7 +20,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final _confirmPasswordController = TextEditingController();
 
   bool _isLoading = false;
-  final _authService = AuthService();
+  late final AuthService _authService;
+
+  @override
+  void initState() {
+    super.initState();
+    _authService = widget._authService ?? AuthService();
+  }
 
   @override
   void dispose() {
@@ -91,7 +100,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       if (!value.contains('@')) {
                         return 'Please enter a valid email';
                       }
-                      if (!value.toLowerCase().endsWith('@students.mq.edu.au') &&
+                      if (!value
+                              .toLowerCase()
+                              .endsWith('@students.mq.edu.au') &&
                           !value.toLowerCase().endsWith('@mq.edu.au')) {
                         return 'Please use your MQ email address';
                       }

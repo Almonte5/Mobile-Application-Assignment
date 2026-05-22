@@ -3,7 +3,10 @@ import 'signup_screen.dart';
 import 'package:mq_marketplace/services/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  const LoginScreen({super.key, AuthService? authService})
+      : _authService = authService;
+
+  final AuthService? _authService;
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -16,7 +19,13 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
 
   bool _isLoading = false;
-  final _authService = AuthService();
+  late final AuthService _authService;
+
+  @override
+  void initState() {
+    super.initState();
+    _authService = widget._authService ?? AuthService();
+  }
 
   @override
   void dispose() {
@@ -34,7 +43,7 @@ class _LoginScreenState extends State<LoginScreen> {
         email: _emailController.text.trim(),
         password: _passwordController.text,
       );
-      
+
       if (!mounted) return;
       debugPrint('signed in as ${_emailController.text}');
     } on AuthException catch (e) {
@@ -49,7 +58,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _goToSignUp() {
     Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const SignUpScreen()),
+      MaterialPageRoute(
+        builder: (_) => SignUpScreen(authService: widget._authService),
+      ),
     );
   }
 
