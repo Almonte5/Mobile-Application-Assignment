@@ -6,6 +6,7 @@ import 'package:mq_marketplace/services/auth_service.dart';
 import 'package:mq_marketplace/services/listing_service.dart';
 import 'package:mq_marketplace/services/location_service.dart';
 import 'package:mq_marketplace/widgets/listing_card.dart';
+import 'package:mq_marketplace/screens/my_listings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
@@ -66,6 +67,12 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: const Text('MQ Marketplace'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.person_outline),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const MyListingsScreen()),
+            ),
+          ),
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () => _authService.signOut(),
