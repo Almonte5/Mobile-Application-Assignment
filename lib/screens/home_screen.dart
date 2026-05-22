@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mq_marketplace/models/category.dart';
 import 'package:mq_marketplace/models/listing.dart';
 import 'package:mq_marketplace/screens/new_listing_screen.dart';
 import 'package:mq_marketplace/services/auth_service.dart';
@@ -32,6 +33,9 @@ class _HomeScreenState extends State<HomeScreen> {
   double? _userLat;
   double? _userLng;
 
+  // null means "All"
+  Category? _selectedCategory;
+
   @override
   void initState() {
     super.initState();
@@ -51,6 +55,11 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  List<Listing> _applyFilter(List<Listing> listings) {
+    if (_selectedCategory == null) return listings;
+    return listings.where((l) => l.category == _selectedCategory).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -63,48 +72,83 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      body: StreamBuilder<List<Listing>>(
-        stream: _listingService.getListings(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
+      body: Column(
+        children: [
+          _buildFilterBar(),
+          Expanded(
+            child: StreamBuilder<List<Listing>>(
+              stream: _listingService.getListings(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
 
-          if (snapshot.hasError) {
-            return const Center(
-              child: Text('Something went wrong. Please try again.'),
-            );
-          }
+                if (snapshot.hasError) {
+                  return const Center(
+                    child: Text('Something went wrong. Please try again.'),
+                  );
+                }
 
-          final listings = snapshot.data ?? [];
+                final listings = _applyFilter(snapshot.data ?? []);
 
-          if (listings.isEmpty) {
-            return const Center(
-              child: Text('No listings yet. Be the first to sell something!'),
-            );
-          }
+                if (listings.isEmpty) {
+                  return const Center(
+                    child: Text(
+                        'No listings yet. Be the first to sell something!'),
+                  );
+                }
 
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: listings.length,
-            itemBuilder: (context, index) {
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: ListingCard(
-                  listing: listings[index],
-                  userLat: _userLat,
-                  userLng: _userLng,
-                ),
-              );
-            },
-          );
-        },
+                return ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: listings.length,
+                  itemBuilder: (context, index) {
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: ListingCard(
+                        listing: listings[index],
+                        userLat: _userLat,
+                        userLng: _userLng,
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => Navigator.of(context).push(
           MaterialPageRoute(builder: (_) => const NewListingScreen()),
         ),
         child: const Icon(Icons.add),
+      ),
+    );
+  }
+
+  Widget _buildFilterBar() {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        children: [
+          FilterChip(
+            label: const Text('All'),
+            selected: _selectedCategory == null,
+            onSelected: (_) => setState(() => _selectedCategory = null),
+          ),
+          const SizedBox(width: 8),
+          ...Category.values.map(
+            (c) => Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: FilterChip(
+                label: Text(c.displayName),
+                selected: _selectedCategory == c,
+                onSelected: (_) => setState(() => _selectedCategory = c),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

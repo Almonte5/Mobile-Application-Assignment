@@ -158,7 +158,7 @@ class ListingDetailScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Sold by',
+              'Listed by',
               style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey),
             ),
             Text(
@@ -185,10 +185,11 @@ class ListingDetailScreen extends StatelessWidget {
   }
 
   void _contactSeller(BuildContext context) {
-    // TODO(day-13): wire up url_launcher mailto: once package is added
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Contact: ${listing.sellerName}'),
+        content: Text(
+          'Contact ${listing.sellerName} to arrange a pickup.',
+        ),
         duration: const Duration(seconds: 4),
       ),
     );
