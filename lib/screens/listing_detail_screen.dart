@@ -38,8 +38,7 @@ class ListingDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isOwner =
-        AuthService().currentUser?.uid == listing.sellerId;
+    final isOwner = AuthService().currentUser?.uid == listing.sellerId;
 
     return Scaffold(
       appBar: AppBar(

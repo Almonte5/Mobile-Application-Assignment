@@ -19,18 +19,18 @@ class AppUser {
       throw StateError('User document ${doc.id} has no data');
     }
     return AppUser(
-      uid: doc.id, 
-      email: data['email'] as String, 
-      displayName: data['displayName'] as String, 
+      uid: doc.id,
+      email: data['email'] as String,
+      displayName: data['displayName'] as String,
       createdAt: (data['createdAt'] as Timestamp).toDate(),
     );
   }
 
   Map<String, dynamic> toFirestore() {
-    return{
-      'email':email,
-      'displayName':displayName,
-      'createdAt':Timestamp.fromDate(createdAt),
+    return {
+      'email': email,
+      'displayName': displayName,
+      'createdAt': Timestamp.fromDate(createdAt),
     };
   }
 }

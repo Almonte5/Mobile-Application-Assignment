@@ -72,13 +72,11 @@ class ListingCard extends StatelessWidget {
                       ),
                       Text(
                         '\$${listing.price.toStringAsFixed(2)}',
-                        style: Theme.of(context)
-                            .textTheme
-                            .titleMedium
-                            ?.copyWith(
-                              color: Theme.of(context).colorScheme.primary,
-                              fontWeight: FontWeight.bold,
-                            ),
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  fontWeight: FontWeight.bold,
+                                ),
                       ),
                     ],
                   ),

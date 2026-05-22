@@ -24,13 +24,15 @@ void main() {
           findsOneWidget);
     });
 
-    testWidgets('shows image placeholder when imageUrl is null', (tester) async {
+    testWidgets('shows image placeholder when imageUrl is null',
+        (tester) async {
       await tester.pumpWidget(buildSubject(_fakeListing(imageUrl: null)));
 
       expect(find.byIcon(Icons.image_outlined), findsOneWidget);
     });
 
-    testWidgets('shows Image.network when imageUrl is provided', (tester) async {
+    testWidgets('shows Image.network when imageUrl is provided',
+        (tester) async {
       await tester.pumpWidget(
         buildSubject(_fakeListing(imageUrl: 'https://example.com/img.jpg')),
       );

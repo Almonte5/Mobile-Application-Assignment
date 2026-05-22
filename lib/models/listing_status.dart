@@ -10,5 +10,4 @@ enum ListingStatus {
       orElse: () => ListingStatus.available,
     );
   }
-
 }

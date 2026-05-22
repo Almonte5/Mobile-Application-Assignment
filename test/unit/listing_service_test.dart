@@ -56,10 +56,9 @@ void main() {
 
   group('ListingService.deleteListing', () {
     test('sets status to sold', () async {
-      final docRef =
-          await fakeFirestore.collection('listings').add(
-                _fakeListing(id: 'del').toFirestore(),
-              );
+      final docRef = await fakeFirestore.collection('listings').add(
+            _fakeListing(id: 'del').toFirestore(),
+          );
 
       await listingService.deleteListing(docRef.id);
 

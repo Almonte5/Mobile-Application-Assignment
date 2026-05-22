@@ -10,10 +10,21 @@ import 'package:mq_marketplace/services/listing_service.dart';
 import 'package:mq_marketplace/services/location_service.dart';
 
 class NewListingScreen extends StatefulWidget {
-  const NewListingScreen({super.key, this.listing});
+  const NewListingScreen({
+    super.key,
+    this.listing,
+    AuthService? authService,
+    ListingService? listingService,
+    FirebaseFirestore? firestore,
+  })  : _authService = authService,
+        _listingService = listingService,
+        _firestore = firestore;
 
   /// If provided, the screen is in edit mode.
   final Listing? listing;
+  final AuthService? _authService;
+  final ListingService? _listingService;
+  final FirebaseFirestore? _firestore;
 
   bool get isEditing => listing != null;
 
@@ -31,8 +42,9 @@ class _NewListingScreenState extends State<NewListingScreen> {
   XFile? _pickedImage;
   bool _isLoading = false;
 
-  final _authService = AuthService();
-  final _listingService = ListingService();
+  late final AuthService _authService;
+  late final ListingService _listingService;
+  late final FirebaseFirestore _firestore;
   final _imagePicker = ImagePicker();
   final _imageUploadService = ImageUploadService();
   final _locationService = LocationService();
@@ -40,6 +52,10 @@ class _NewListingScreenState extends State<NewListingScreen> {
   @override
   void initState() {
     super.initState();
+    _authService = widget._authService ?? AuthService();
+    _listingService = widget._listingService ?? ListingService();
+    _firestore = widget._firestore ?? FirebaseFirestore.instance;
+
     if (widget.isEditing) {
       final l = widget.listing!;
       _titleController.text = l.title;
@@ -105,10 +121,8 @@ class _NewListingScreenState extends State<NewListingScreen> {
         );
         await _listingService.updateListing(updated);
       } else {
-        final userDoc = await FirebaseFirestore.instance
-            .collection('users')
-            .doc(user.uid)
-            .get();
+        final userDoc =
+            await _firestore.collection('users').doc(user.uid).get();
         final sellerName =
             userDoc.data()?['displayName'] as String? ?? 'Unknown';
 

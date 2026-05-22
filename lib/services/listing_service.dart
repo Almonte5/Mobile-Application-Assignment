@@ -14,9 +14,8 @@ class ListingService {
         .where('status', isEqualTo: 'available')
         .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => Listing.fromFirestore(doc))
-            .toList());
+        .map((snapshot) =>
+            snapshot.docs.map((doc) => Listing.fromFirestore(doc)).toList());
   }
 
   /// All listings by a specific seller, newest first.
@@ -26,9 +25,8 @@ class ListingService {
         .where('sellerId', isEqualTo: userId)
         .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => Listing.fromFirestore(doc))
-            .toList());
+        .map((snapshot) =>
+            snapshot.docs.map((doc) => Listing.fromFirestore(doc)).toList());
   }
 
   /// Write a new listing to Firestore.

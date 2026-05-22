@@ -109,8 +109,7 @@ void main() {
       );
 
       // Verify the doc was written to the fake Firestore
-      final doc =
-          await fakeFirestore.collection('users').doc('uid-123').get();
+      final doc = await fakeFirestore.collection('users').doc('uid-123').get();
       expect(doc.exists, isTrue);
       expect(doc.data()!['displayName'], 'Test User');
       expect(doc.data()!['email'], 'test@students.mq.edu.au');
