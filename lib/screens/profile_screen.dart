@@ -110,7 +110,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Something went wrong. Please try again.')),
+        const SnackBar(
+            content: Text('Something went wrong. Please try again.')),
       );
     } finally {
       if (mounted) setState(() => _isSaving = false);
@@ -172,7 +173,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           child: CircleAvatar(
                             radius: 56,
                             backgroundColor: Colors.black45,
-                            child: CircularProgressIndicator(color: Colors.white),
+                            child:
+                                CircularProgressIndicator(color: Colors.white),
                           ),
                         ),
                       GestureDetector(

@@ -6,6 +6,7 @@ class Listing {
   final String id;
   final String sellerId;
   final String sellerName;
+  final String? sellerPhotoUrl;
   final String title;
   final String description;
   final double price;
@@ -15,22 +16,22 @@ class Listing {
   final ListingStatus status;
   final DateTime createdAt;
   final DateTime updatedAt;
-  final String sellerEmail;
 
-  const Listing(
-      {required this.id,
-      required this.sellerId,
-      required this.sellerName,
-      required this.title,
-      required this.description,
-      required this.price,
-      required this.category,
-      this.imageUrl,
-      this.location,
-      required this.status,
-      required this.createdAt,
-      required this.updatedAt,
-      this.sellerEmail = ''});
+  const Listing({
+    required this.id,
+    required this.sellerId,
+    required this.sellerName,
+    this.sellerPhotoUrl,
+    required this.title,
+    required this.description,
+    required this.price,
+    required this.category,
+    this.imageUrl,
+    this.location,
+    required this.status,
+    required this.createdAt,
+    required this.updatedAt,
+  });
 
   factory Listing.fromFirestore(DocumentSnapshot<Map<String, dynamic>> doc) {
     final data = doc.data();
@@ -41,6 +42,7 @@ class Listing {
       id: doc.id,
       sellerId: data['sellerId'] as String,
       sellerName: data['sellerName'] as String,
+      sellerPhotoUrl: data['sellerPhotoUrl'] as String?,
       title: data['title'] as String,
       description: data['description'] as String,
       price: (data['price'] as num).toDouble(),
@@ -50,7 +52,6 @@ class Listing {
       status: ListingStatus.fromFirestore(data['status'] as String),
       createdAt: (data['createdAt'] as Timestamp).toDate(),
       updatedAt: (data['updatedAt'] as Timestamp).toDate(),
-      sellerEmail: data['sellerEmail'] as String? ?? '',
     );
   }
 
@@ -58,6 +59,7 @@ class Listing {
     return {
       'sellerId': sellerId,
       'sellerName': sellerName,
+      'sellerPhotoUrl': sellerPhotoUrl,
       'title': title,
       'description': description,
       'price': price,
@@ -67,7 +69,6 @@ class Listing {
       'status': status.firestoreValue,
       'createdAt': Timestamp.fromDate(createdAt),
       'updatedAt': Timestamp.fromDate(updatedAt),
-      'sellerEmail': sellerEmail,
     };
   }
 }

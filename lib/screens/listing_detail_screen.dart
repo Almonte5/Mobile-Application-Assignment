@@ -13,7 +13,34 @@ class ListingDetailScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Remove listing?'),
+        title: const Text('Delete listing?'),
+        content: const Text(
+          'This will permanently remove your listing from the feed.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            onPressed: () async {
+              Navigator.of(context).pop();
+              await ListingService().deleteListing(listing.id);
+              if (context.mounted) Navigator.of(context).pop();
+            },
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _confirmMarkAsSold(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Mark as sold?'),
         content: const Text(
           'This will mark your listing as sold and remove it from the feed.',
         ),
@@ -24,11 +51,11 @@ class ListingDetailScreen extends StatelessWidget {
           ),
           TextButton(
             onPressed: () async {
-              Navigator.of(context).pop(); // close dialog
+              Navigator.of(context).pop();
               await ListingService().deleteListing(listing.id);
-              if (context.mounted) Navigator.of(context).pop(); // back to feed
+              if (context.mounted) Navigator.of(context).pop();
             },
-            child: const Text('Remove'),
+            child: const Text('Mark as Sold'),
           ),
         ],
       ),
@@ -52,6 +79,10 @@ class ListingDetailScreen extends StatelessWidget {
                   builder: (_) => NewListingScreen(listing: listing),
                 ),
               ),
+            ),
+            IconButton(
+              icon: const Icon(Icons.delete_outline),
+              onPressed: () => _confirmDelete(context),
             ),
           ],
         ],
@@ -91,10 +122,8 @@ class ListingDetailScreen extends StatelessWidget {
                   const Divider(height: 32),
                   _buildSellerSection(theme),
                   const SizedBox(height: 24),
-                  if (isOwner)
-                    _buildOwnerActions(context)
-                  else
-                    _buildContactButton(context),
+                  if (!isOwner) _buildContactButton(context),
+                  if (isOwner) _buildMarkAsSoldButton(context),
                 ],
               ),
             ),
@@ -151,13 +180,29 @@ class ListingDetailScreen extends StatelessWidget {
   Widget _buildSellerSection(ThemeData theme) {
     return Row(
       children: [
-        const Icon(Icons.person_outline),
-        const SizedBox(width: 8),
+        CircleAvatar(
+          radius: 20,
+          backgroundColor: theme.colorScheme.secondaryContainer,
+          backgroundImage: listing.sellerPhotoUrl != null
+              ? NetworkImage(listing.sellerPhotoUrl!)
+              : null,
+          child: listing.sellerPhotoUrl == null
+              ? Text(
+                  listing.sellerName.isNotEmpty
+                      ? listing.sellerName[0].toUpperCase()
+                      : '?',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    color: theme.colorScheme.onSecondaryContainer,
+                  ),
+                )
+              : null,
+        ),
+        const SizedBox(width: 12),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Listed by',
+              'Sold by',
               style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey),
             ),
             Text(
@@ -167,23 +212,6 @@ class ListingDetailScreen extends StatelessWidget {
               ),
             ),
           ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildOwnerActions(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        ElevatedButton.icon(
-          onPressed: () => _confirmDelete(context),
-          icon: const Icon(Icons.check_circle_outline),
-          label: const Text('Mark as Sold'),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.green,
-            foregroundColor: Colors.white,
-          ),
         ),
       ],
     );
@@ -200,13 +228,26 @@ class ListingDetailScreen extends StatelessWidget {
     );
   }
 
+  Widget _buildMarkAsSoldButton(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton.icon(
+        onPressed: () => _confirmMarkAsSold(context),
+        icon: const Icon(Icons.check_circle_outline),
+        label: const Text('Mark as Sold'),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.green,
+          foregroundColor: Colors.white,
+        ),
+      ),
+    );
+  }
+
   void _contactSeller(BuildContext context) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(
-          'Contact ${listing.sellerName} at ${listing.sellerEmail}',
-        ),
-        duration: const Duration(seconds: 6),
+        content: Text('Contact ${listing.sellerName} at ${listing.sellerName}'),
+        duration: const Duration(seconds: 4),
       ),
     );
   }

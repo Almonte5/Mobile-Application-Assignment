@@ -7,6 +7,7 @@ import 'package:mq_marketplace/models/listing_status.dart';
 import 'package:mq_marketplace/services/auth_service.dart';
 import 'package:mq_marketplace/services/image_upload_service.dart';
 import 'package:mq_marketplace/services/listing_service.dart';
+import 'package:mq_marketplace/services/location_service.dart';
 
 class NewListingScreen extends StatefulWidget {
   const NewListingScreen({
@@ -14,15 +15,18 @@ class NewListingScreen extends StatefulWidget {
     this.listing,
     AuthService? authService,
     ListingService? listingService,
-    FirebaseFirestore? firestore,
+    LocationService? locationService,
+    ImageUploadService? imageUploadService,
   })  : _authService = authService,
         _listingService = listingService,
-        _firestore = firestore;
+        _locationService = locationService,
+        _imageUploadService = imageUploadService;
 
   final Listing? listing;
   final AuthService? _authService;
   final ListingService? _listingService;
-  final FirebaseFirestore? _firestore;
+  final LocationService? _locationService;
+  final ImageUploadService? _imageUploadService;
 
   bool get isEditing => listing != null;
 
@@ -44,16 +48,17 @@ class _NewListingScreenState extends State<NewListingScreen> {
 
   late final AuthService _authService;
   late final ListingService _listingService;
-  late final FirebaseFirestore _firestore;
+  late final LocationService _locationService;
+  late final ImageUploadService _imageUploadService;
   final _imagePicker = ImagePicker();
-  final _imageUploadService = ImageUploadService();
 
   @override
   void initState() {
     super.initState();
     _authService = widget._authService ?? AuthService();
     _listingService = widget._listingService ?? ListingService();
-    _firestore = widget._firestore ?? FirebaseFirestore.instance;
+    _locationService = widget._locationService ?? LocationService();
+    _imageUploadService = widget._imageUploadService ?? ImageUploadService();
 
     if (widget.isEditing) {
       final l = widget.listing!;
@@ -69,6 +74,7 @@ class _NewListingScreenState extends State<NewListingScreen> {
       _selectedCategory = Category.textbooks;
     }
   }
+  // rest of the file unchanged...
 
   @override
   void dispose() {
@@ -89,11 +95,11 @@ class _NewListingScreenState extends State<NewListingScreen> {
     if (image != null) setState(() => _pickedImage = image);
   }
 
-  GeoPoint? _buildLocation() {
+  GeoPoint? _parseLocation() {
     final lat = double.tryParse(_latController.text.trim());
     final lng = double.tryParse(_lngController.text.trim());
-    if (lat == null || lng == null) return null;
-    return GeoPoint(lat, lng);
+    if (lat != null && lng != null) return GeoPoint(lat, lng);
+    return null;
   }
 
   Future<void> _onSubmit() async {
@@ -110,7 +116,9 @@ class _NewListingScreenState extends State<NewListingScreen> {
         imageUrl = await _imageUploadService.uploadImage(_pickedImage!);
       }
 
-      final location = _buildLocation();
+      final location =
+          _parseLocation() ?? await _locationService.getCurrentLocation();
+
       final now = DateTime.now();
 
       if (widget.isEditing) {
@@ -118,7 +126,7 @@ class _NewListingScreenState extends State<NewListingScreen> {
           id: widget.listing!.id,
           sellerId: widget.listing!.sellerId,
           sellerName: widget.listing!.sellerName,
-          sellerEmail: widget.listing!.sellerEmail,
+          sellerPhotoUrl: widget.listing!.sellerPhotoUrl,
           title: _titleController.text.trim(),
           description: _descriptionController.text.trim(),
           price: double.parse(_priceController.text.trim()),
@@ -131,17 +139,19 @@ class _NewListingScreenState extends State<NewListingScreen> {
         );
         await _listingService.updateListing(updated);
       } else {
-        final userDoc =
-            await _firestore.collection('users').doc(user.uid).get();
+        final userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .get();
         final sellerName =
             userDoc.data()?['displayName'] as String? ?? 'Unknown';
-        final sellerEmail = userDoc.data()?['email'] as String? ?? '';
+        final sellerPhotoUrl = userDoc.data()?['photoUrl'] as String?;
 
         final listing = Listing(
           id: '',
           sellerId: user.uid,
           sellerName: sellerName,
-          sellerEmail: sellerEmail,
+          sellerPhotoUrl: sellerPhotoUrl,
           title: _titleController.text.trim(),
           description: _descriptionController.text.trim(),
           price: double.parse(_priceController.text.trim()),
@@ -297,34 +307,19 @@ class _NewListingScreenState extends State<NewListingScreen> {
                   },
                 ),
                 const SizedBox(height: 16),
-                const Text(
-                  'Location (optional)',
-                  style: TextStyle(color: Colors.grey, fontSize: 12),
-                ),
-                const SizedBox(height: 8),
                 Row(
                   children: [
                     Expanded(
                       child: TextFormField(
                         controller: _latController,
                         decoration: const InputDecoration(
-                          labelText: 'Latitude (S)',
+                          labelText: 'Latitude (optional)',
                           border: OutlineInputBorder(),
                         ),
                         keyboardType: const TextInputType.numberWithOptions(
                           decimal: true,
                           signed: true,
                         ),
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return null; // optional
-                          }
-                          final parsed = double.tryParse(value.trim());
-                          if (parsed == null || parsed < -90 || parsed > 90) {
-                            return 'Invalid';
-                          }
-                          return null;
-                        },
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -332,23 +327,13 @@ class _NewListingScreenState extends State<NewListingScreen> {
                       child: TextFormField(
                         controller: _lngController,
                         decoration: const InputDecoration(
-                          labelText: 'Longitude (E)',
+                          labelText: 'Longitude (optional)',
                           border: OutlineInputBorder(),
                         ),
                         keyboardType: const TextInputType.numberWithOptions(
                           decimal: true,
                           signed: true,
                         ),
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return null; // optional
-                          }
-                          final parsed = double.tryParse(value.trim());
-                          if (parsed == null || parsed < -180 || parsed > 180) {
-                            return 'Invalid';
-                          }
-                          return null;
-                        },
                       ),
                     ),
                   ],

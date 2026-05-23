@@ -23,6 +23,15 @@ class MQMarketplaceApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: mqMaroon),
         useMaterial3: true,
+        appBarTheme: const AppBarTheme(
+          centerTitle: true,
+          titleTextStyle: TextStyle(
+            fontFamily: 'Serif',
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF8C1A4B),
+          ),
+        ),
       ),
       home: const AuthWrapper(),
     );
