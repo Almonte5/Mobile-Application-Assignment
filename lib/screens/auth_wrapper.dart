@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:mq_marketplace/services/auth_service.dart';
-import 'package:mq_marketplace/screens/home_screen.dart';
 import 'package:mq_marketplace/screens/login_screen.dart';
+import 'package:mq_marketplace/screens/main_screen.dart';
 
 class AuthWrapper extends StatelessWidget {
   const AuthWrapper({super.key});
@@ -21,7 +21,7 @@ class AuthWrapper extends StatelessWidget {
         }
         // If there's a user, go to home. Otherwise, go to login.
         if (snapshot.hasData) {
-          return const HomeScreen();
+          return const MainScreen();
         }
         return const LoginScreen();
       },

@@ -1,26 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:mq_marketplace/models/category.dart';
 import 'package:mq_marketplace/models/listing.dart';
-import 'package:mq_marketplace/screens/new_listing_screen.dart';
-import 'package:mq_marketplace/services/auth_service.dart';
 import 'package:mq_marketplace/services/listing_service.dart';
 import 'package:mq_marketplace/services/location_service.dart';
 import 'package:mq_marketplace/widgets/listing_card.dart';
-import 'package:mq_marketplace/screens/my_listings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
     super.key,
     ListingService? listingService,
     LocationService? locationService,
-    AuthService? authService,
   })  : _listingService = listingService,
-        _locationService = locationService,
-        _authService = authService;
+        _locationService = locationService;
 
   final ListingService? _listingService;
   final LocationService? _locationService;
-  final AuthService? _authService;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -29,12 +23,9 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   late final ListingService _listingService;
   late final LocationService _locationService;
-  late final AuthService _authService;
 
   double? _userLat;
   double? _userLng;
-
-  // null means "All"
   Category? _selectedCategory;
 
   @override
@@ -42,7 +33,6 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     _listingService = widget._listingService ?? ListingService();
     _locationService = widget._locationService ?? LocationService();
-    _authService = widget._authService ?? AuthService();
     _fetchLocation();
   }
 
@@ -66,18 +56,6 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('MQ Marketplace'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.person_outline),
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const MyListingsScreen()),
-            ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () => _authService.signOut(),
-          ),
-        ],
       ),
       body: Column(
         children: [
@@ -123,12 +101,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
         ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => const NewListingScreen()),
-        ),
-        child: const Icon(Icons.add),
       ),
     );
   }
