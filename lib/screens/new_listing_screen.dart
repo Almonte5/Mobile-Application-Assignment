@@ -74,7 +74,6 @@ class _NewListingScreenState extends State<NewListingScreen> {
       _selectedCategory = Category.textbooks;
     }
   }
-  // rest of the file unchanged...
 
   @override
   void dispose() {
