@@ -126,6 +126,7 @@ class _NewListingScreenState extends State<NewListingScreen> {
           sellerId: widget.listing!.sellerId,
           sellerName: widget.listing!.sellerName,
           sellerPhotoUrl: widget.listing!.sellerPhotoUrl,
+          sellerEmail: widget.listing!.sellerEmail,
           title: _titleController.text.trim(),
           description: _descriptionController.text.trim(),
           price: double.parse(_priceController.text.trim()),
@@ -145,12 +146,14 @@ class _NewListingScreenState extends State<NewListingScreen> {
         final sellerName =
             userDoc.data()?['displayName'] as String? ?? 'Unknown';
         final sellerPhotoUrl = userDoc.data()?['photoUrl'] as String?;
+        final sellerEmail = userDoc.data()?['email'] as String?;
 
         final listing = Listing(
           id: '',
           sellerId: user.uid,
           sellerName: sellerName,
           sellerPhotoUrl: sellerPhotoUrl,
+          sellerEmail: sellerEmail,
           title: _titleController.text.trim(),
           description: _descriptionController.text.trim(),
           price: double.parse(_priceController.text.trim()),

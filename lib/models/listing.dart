@@ -7,6 +7,7 @@ class Listing {
   final String sellerId;
   final String sellerName;
   final String? sellerPhotoUrl;
+  final String? sellerEmail;
   final String title;
   final String description;
   final double price;
@@ -22,6 +23,7 @@ class Listing {
     required this.sellerId,
     required this.sellerName,
     this.sellerPhotoUrl,
+    this.sellerEmail,
     required this.title,
     required this.description,
     required this.price,
@@ -43,6 +45,7 @@ class Listing {
       sellerId: data['sellerId'] as String,
       sellerName: data['sellerName'] as String,
       sellerPhotoUrl: data['sellerPhotoUrl'] as String?,
+      sellerEmail: data['sellerEmail'] as String?,
       title: data['title'] as String,
       description: data['description'] as String,
       price: (data['price'] as num).toDouble(),
@@ -60,6 +63,7 @@ class Listing {
       'sellerId': sellerId,
       'sellerName': sellerName,
       'sellerPhotoUrl': sellerPhotoUrl,
+      'sellerEmail': sellerEmail,
       'title': title,
       'description': description,
       'price': price,
