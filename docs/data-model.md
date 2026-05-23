@@ -1,19 +1,20 @@
 # MQ Marketplace — Data Model
 
 ## Overview
-MQ Marketplace stores its data in Cloud Firestore, a NoSQL document database from Firebase. Listing images are uploaded to Cloudinary and only their URLs are stored in Firestore. User authentication is handled by Firebase Auth, which stores credentials separately from the application data described here.
+MQ Marketplace stores its data in Cloud Firestore, a NoSQL document database from Firebase. Listing images and user profile photos are uploaded to Cloudinary and only their URLs are stored in Firestore. User authentication is handled by Firebase Auth, which stores credentials separately from the application data described here.
 
-The Schema is minimal with just two collections (users and listings) and a hardcoded category enum. Messaging between buyers and sellers, so the listing details will just show the sellers email instead.
+The schema is minimal with just two collections (`users` and `listings`) and a hardcoded category enum. Messaging between buyers and sellers is handled by showing the seller's email on the listing detail screen.
 
 ## Collections
 
 ### `users`
-Represents a registered Macqurie University member who can create listings and also browse them
+Represents a registered Macquarie University member who can create listings and browse them.
 
 | Field         | Type        | Required | Notes                                                                 |
 |---------------|-------------|----------|-----------------------------------------------------------------------|
 | `email`       | string      | yes      | The user's MQ email. Must end in `@students.mq.edu.au` or `@mq.edu.au`. |
-| `displayName` | string      | yes      | Shown on listings as the seller name. Set during sign-up.             |
+| `displayName` | string      | yes      | Shown on listings as the seller name. Set during sign-up, editable via Profile screen. |
+| `photoUrl`    | string      | no       | Cloudinary URL for the user's profile photo. Optional — a fallback initial avatar is shown if not set. |
 | `createdAt`   | timestamp   | yes      | Server timestamp set when the user document is created.               |
 
 **Document ID:** the Firebase Auth UID. Using the UID as the document ID makes it trivial to look up a user by their auth identity, and guarantees one doc per account. No separate `id` field needed inside the document.
@@ -21,21 +22,22 @@ Represents a registered Macqurie University member who can create listings and a
 ### `listings`
 Represents an item being offered for sale by a user.
 
-| Field         | Type             | Required | Notes                                                                                     |
-|---------------|------------------|----------|-------------------------------------------------------------------------------------------|
-| `sellerId`    | string           | yes      | The Firebase Auth UID of the seller. Matches a document ID in `users`.                    |
-| `sellerName`  | string           | yes      | Denormalised copy of the seller's `displayName` so listings can be rendered without a second read. |
-| `title`       | string           | yes      | Short item name. Max 80 characters (enforced in the UI).                                  |
-| `description` | string           | yes      | Longer description. Max 1000 characters.                                                  |
-| `price`       | number (double)  | yes      | Price in AUD. Stored as a double for simplicity (e.g. `19.99`).                          |
-| `category`    | string           | yes      | One of: `"textbooks"`, `"electronics"`, `"clothing"`. Hardcoded enum, see below.          |
-| `imageUrl`    | string           | no       | Cloudinary URL for the listing image. Optional — listings without a photo are allowed.    |
-| `location`    | geopoint         | no       | Lat/lng captured at listing creation. Optional — user may deny location permission.       |
-| `status`      | string           | yes      | One of: `"available"`, `"sold"`. Defaults to `"available"` on creation.                  |
-| `createdAt`   | timestamp        | yes      | Server timestamp set on creation. Used for sorting the feed.                              |
-| `updatedAt`   | timestamp        | yes      | Server timestamp updated on every edit.                                                   |
+| Field            | Type             | Required | Notes                                                                                     |
+|------------------|------------------|----------|-------------------------------------------------------------------------------------------|
+| `sellerId`       | string           | yes      | The Firebase Auth UID of the seller. Matches a document ID in `users`.                    |
+| `sellerName`     | string           | yes      | Denormalised copy of the seller's `displayName` so listings can be rendered without a second read. |
+| `sellerPhotoUrl` | string           | no       | Denormalised copy of the seller's `photoUrl` at the time of listing creation. Optional — fallback initial avatar shown if not set. |
+| `title`          | string           | yes      | Short item name. Max 80 characters (enforced in the UI).                                  |
+| `description`    | string           | yes      | Longer description. Max 1000 characters.                                                  |
+| `price`          | number (double)  | yes      | Price in AUD. Stored as a double for simplicity (e.g. `19.99`).                          |
+| `category`       | string           | yes      | One of: `"textbooks"`, `"electronics"`, `"clothing"`. Hardcoded enum, see below.          |
+| `imageUrl`       | string           | no       | Cloudinary URL for the listing image. Optional — listings without a photo are allowed.    |
+| `location`       | geopoint         | no       | Lat/lng entered manually at listing creation. Optional.                                   |
+| `status`         | string           | yes      | One of: `"available"`, `"sold"`. Defaults to `"available"` on creation.                  |
+| `createdAt`      | timestamp        | yes      | Server timestamp set on creation. Used for sorting the feed.                              |
+| `updatedAt`      | timestamp        | yes      | Server timestamp updated on every edit.                                                   |
 
-**Document ID:** auto-generated by Firestone. Listings dont have a natural unique key.
+**Document ID:** auto-generated by Firestore. Listings don't have a natural unique key.
 
 ## Relationships
 A listing is owned by exactly one user. The link is the `sellerId` field on a listing, which equals the `users` document ID (which is the Firebase Auth UID).
@@ -44,11 +46,9 @@ A listing is owned by exactly one user. The link is the `sellerId` field on a li
 users/{uid}            ←──── listings/{listingId}.sellerId
 ```
 
-
-
 ## Categories (enum, not a collection)
-The three supported categories are hardcoded in Dart as an enum rather than stored in Firestore. The set is small, fixed, and unlikely to change during the assignment:
- 
+The three supported categories are hardcoded in Dart as an enum rather than stored in Firestore:
+
 - `textbooks` — Textbooks & study materials
 - `electronics` — Electronics & tech
 - `clothing` — Clothing (incl. lab coats, uniforms)
@@ -56,10 +56,14 @@ The three supported categories are hardcoded in Dart as an enum rather than stor
 ## Queries the app needs to support
 
 These are the reads the app will perform. Each one informs whether a Firestore composite index is needed.
- 
+
 1. **Browse feed** — get all listings where `status == "available"`, ordered by `createdAt` descending.
 2. **Listing detail** — get a single listing by document ID.
 3. **My listings** — get all listings where `sellerId == <current user UID>`, ordered by `createdAt` descending.
-4. **Filter by category** *(optional / time permitting)* — get all listings where `status == "available"` AND `category == <selected>`, ordered by `createdAt` descending.
+4. **Filter by category** — get all listings where `status == "available"` AND `category == <selected>`, ordered by `createdAt` descending.
 
 ## Notes & decisions
+
+- `sellerPhotoUrl` is denormalised onto listings for the same reason as `sellerName` — it avoids a second Firestore read when rendering the browse feed.
+- Profile photos and listing images both go through Cloudinary using the `mq_marketplace_unsigned` upload preset. Only the resulting URL is stored in Firestore.
+- Location is entered manually by the seller as latitude/longitude fields on the New Listing screen. The home feed uses `geolocator` to get the buyer's current position and calculates distance to each listing client-side.
