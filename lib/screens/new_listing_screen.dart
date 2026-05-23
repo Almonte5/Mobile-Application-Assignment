@@ -7,7 +7,6 @@ import 'package:mq_marketplace/models/listing_status.dart';
 import 'package:mq_marketplace/services/auth_service.dart';
 import 'package:mq_marketplace/services/image_upload_service.dart';
 import 'package:mq_marketplace/services/listing_service.dart';
-import 'package:mq_marketplace/services/location_service.dart';
 
 class NewListingScreen extends StatefulWidget {
   const NewListingScreen({
@@ -20,7 +19,6 @@ class NewListingScreen extends StatefulWidget {
         _listingService = listingService,
         _firestore = firestore;
 
-  /// If provided, the screen is in edit mode.
   final Listing? listing;
   final AuthService? _authService;
   final ListingService? _listingService;
@@ -37,6 +35,8 @@ class _NewListingScreenState extends State<NewListingScreen> {
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _priceController = TextEditingController();
+  final _latController = TextEditingController();
+  final _lngController = TextEditingController();
 
   late Category _selectedCategory;
   XFile? _pickedImage;
@@ -47,7 +47,6 @@ class _NewListingScreenState extends State<NewListingScreen> {
   late final FirebaseFirestore _firestore;
   final _imagePicker = ImagePicker();
   final _imageUploadService = ImageUploadService();
-  final _locationService = LocationService();
 
   @override
   void initState() {
@@ -62,6 +61,10 @@ class _NewListingScreenState extends State<NewListingScreen> {
       _descriptionController.text = l.description;
       _priceController.text = l.price.toString();
       _selectedCategory = l.category;
+      if (l.location != null) {
+        _latController.text = l.location!.latitude.toString();
+        _lngController.text = l.location!.longitude.toString();
+      }
     } else {
       _selectedCategory = Category.textbooks;
     }
@@ -72,6 +75,8 @@ class _NewListingScreenState extends State<NewListingScreen> {
     _titleController.dispose();
     _descriptionController.dispose();
     _priceController.dispose();
+    _latController.dispose();
+    _lngController.dispose();
     super.dispose();
   }
 
@@ -84,6 +89,13 @@ class _NewListingScreenState extends State<NewListingScreen> {
     if (image != null) setState(() => _pickedImage = image);
   }
 
+  GeoPoint? _buildLocation() {
+    final lat = double.tryParse(_latController.text.trim());
+    final lng = double.tryParse(_lngController.text.trim());
+    if (lat == null || lng == null) return null;
+    return GeoPoint(lat, lng);
+  }
+
   Future<void> _onSubmit() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -93,15 +105,12 @@ class _NewListingScreenState extends State<NewListingScreen> {
       final user = _authService.currentUser;
       if (user == null) throw Exception('Not logged in');
 
-      // Upload new image if one was picked, otherwise keep existing URL
       String? imageUrl = widget.listing?.imageUrl;
       if (_pickedImage != null) {
         imageUrl = await _imageUploadService.uploadImage(_pickedImage!);
       }
 
-      // Capture location — optional, returns null if permission denied
-      final location = await _locationService.getCurrentLocation();
-
+      final location = _buildLocation();
       final now = DateTime.now();
 
       if (widget.isEditing) {
@@ -109,6 +118,7 @@ class _NewListingScreenState extends State<NewListingScreen> {
           id: widget.listing!.id,
           sellerId: widget.listing!.sellerId,
           sellerName: widget.listing!.sellerName,
+          sellerEmail: widget.listing!.sellerEmail,
           title: _titleController.text.trim(),
           description: _descriptionController.text.trim(),
           price: double.parse(_priceController.text.trim()),
@@ -285,6 +295,67 @@ class _NewListingScreenState extends State<NewListingScreen> {
                       setState(() => _selectedCategory = value);
                     }
                   },
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Location (optional)',
+                  style: TextStyle(color: Colors.grey, fontSize: 12),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        controller: _latController,
+                        decoration: const InputDecoration(
+                          labelText: 'Latitude (S)',
+                          border: OutlineInputBorder(),
+                        ),
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                          signed: true,
+                        ),
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return null; // optional
+                          }
+                          final parsed = double.tryParse(value.trim());
+                          if (parsed == null ||
+                              parsed < -90 ||
+                              parsed > 90) {
+                            return 'Invalid';
+                          }
+                          return null;
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: TextFormField(
+                        controller: _lngController,
+                        decoration: const InputDecoration(
+                          labelText: 'Longitude (E)',
+                          border: OutlineInputBorder(),
+                        ),
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                          signed: true,
+                        ),
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return null; // optional
+                          }
+                          final parsed = double.tryParse(value.trim());
+                          if (parsed == null ||
+                              parsed < -180 ||
+                              parsed > 180) {
+                            return 'Invalid';
+                          }
+                          return null;
+                        },
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 24),
                 ElevatedButton(

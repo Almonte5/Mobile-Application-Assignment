@@ -53,10 +53,6 @@ class ListingDetailScreen extends StatelessWidget {
                 ),
               ),
             ),
-            IconButton(
-              icon: const Icon(Icons.delete_outline),
-              onPressed: () => _confirmDelete(context),
-            ),
           ],
         ],
       ),
@@ -95,7 +91,10 @@ class ListingDetailScreen extends StatelessWidget {
                   const Divider(height: 32),
                   _buildSellerSection(theme),
                   const SizedBox(height: 24),
-                  _buildContactButton(context),
+                  if (isOwner)
+                    _buildOwnerActions(context)
+                  else
+                    _buildContactButton(context),
                 ],
               ),
             ),
@@ -173,6 +172,23 @@ class ListingDetailScreen extends StatelessWidget {
     );
   }
 
+  Widget _buildOwnerActions(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ElevatedButton.icon(
+          onPressed: () => _confirmDelete(context),
+          icon: const Icon(Icons.check_circle_outline),
+          label: const Text('Mark as Sold'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.green,
+            foregroundColor: Colors.white,
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildContactButton(BuildContext context) {
     return SizedBox(
       width: double.infinity,
@@ -185,13 +201,13 @@ class ListingDetailScreen extends StatelessWidget {
   }
 
   void _contactSeller(BuildContext context) {
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(
-      content: Text(
-        'Contact ${listing.sellerName} at ${listing.sellerEmail}',
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          'Contact ${listing.sellerName} at ${listing.sellerEmail}',
+        ),
+        duration: const Duration(seconds: 6),
       ),
-      duration: const Duration(seconds: 10),
-    ),
-  );
-}
+    );
+  }
 }

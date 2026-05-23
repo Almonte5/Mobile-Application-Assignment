@@ -26,6 +26,9 @@ class LocationService {
         locationSettings: const LocationSettings(
           accuracy: LocationAccuracy.medium,
         ),
+      ).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () => throw Exception('Location timeout'),
       );
 
       return GeoPoint(position.latitude, position.longitude);
