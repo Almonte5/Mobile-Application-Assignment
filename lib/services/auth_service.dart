@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:mq_marketplace/models/app_user.dart';
 
 class AuthException implements Exception {
   final String message;
@@ -70,6 +71,40 @@ class AuthService {
       throw const AuthException(
         'Could not complete signup. Please try again.',
       );
+    }
+  }
+
+  Future<AppUser?> getUser(String uid) async {
+    final doc = await _firestore.collection('users').doc(uid).get();
+    if (!doc.exists) return null;
+    return AppUser.fromFirestore(doc);
+  }
+
+  Future<void> updateProfile({
+    required String uid,
+    required String displayName,
+    required String email,
+    String? photoUrl,
+  }) async {
+    final normalisedEmail = email.trim().toLowerCase();
+    final isMqEmail = normalisedEmail.endsWith('@students.mq.edu.au') ||
+        normalisedEmail.endsWith('@mq.edu.au');
+    if (!isMqEmail) {
+      throw const AuthException('Please use your MQ email address.');
+    }
+
+    final updates = <String, dynamic>{
+      'displayName': displayName.trim(),
+      'email': normalisedEmail,
+    };
+    if (photoUrl != null) updates['photoUrl'] = photoUrl;
+
+    await _firestore.collection('users').doc(uid).update(updates);
+
+    // Also update Firebase Auth email if it changed
+    final user = _auth.currentUser;
+    if (user != null && user.email != normalisedEmail) {
+      await user.verifyBeforeUpdateEmail(normalisedEmail);
     }
   }
 

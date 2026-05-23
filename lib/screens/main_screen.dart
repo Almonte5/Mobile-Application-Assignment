@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mq_marketplace/screens/home_screen.dart';
 import 'package:mq_marketplace/screens/my_listings_screen.dart';
 import 'package:mq_marketplace/screens/new_listing_screen.dart';
+import 'package:mq_marketplace/screens/profile_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -16,19 +17,17 @@ class _MainScreenState extends State<MainScreen> {
   final _tabs = const [
     HomeScreen(),
     MyListingsScreen(),
-    Placeholder(), // Profile — coming soon
+    ProfileScreen(),
   ];
 
   Future<void> _onTabTapped(int index) async {
     if (index == 1) {
-      // Sell tab is an action, not a destination
       await Navigator.of(context).push(
         MaterialPageRoute(builder: (_) => const NewListingScreen()),
       );
       return;
     }
 
-    // Remap: 0→Home, 2→MyListings, 3→Profile
     final bodyIndex = index == 0 ? 0 : index - 1;
     setState(() => _selectedIndex = bodyIndex);
   }
