@@ -17,21 +17,20 @@ class Listing {
   final DateTime updatedAt;
   final String sellerEmail;
 
-  const Listing({
-    required this.id,
-    required this.sellerId,
-    required this.sellerName,
-    required this.title,
-    required this.description,
-    required this.price,
-    required this.category,
-    this.imageUrl,
-    this.location,
-    required this.status,
-    required this.createdAt,
-    required this.updatedAt,
-    this.sellerEmail = ''
-  });
+  const Listing(
+      {required this.id,
+      required this.sellerId,
+      required this.sellerName,
+      required this.title,
+      required this.description,
+      required this.price,
+      required this.category,
+      this.imageUrl,
+      this.location,
+      required this.status,
+      required this.createdAt,
+      required this.updatedAt,
+      this.sellerEmail = ''});
 
   factory Listing.fromFirestore(DocumentSnapshot<Map<String, dynamic>> doc) {
     final data = doc.data();

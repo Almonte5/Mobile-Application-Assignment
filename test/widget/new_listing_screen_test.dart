@@ -41,7 +41,7 @@ void main() {
     testWidgets('renders all form fields', (tester) async {
       await tester.pumpWidget(buildSubject());
 
-      expect(find.byType(TextFormField), findsNWidgets(3));
+      expect(find.byType(TextFormField), findsNWidgets(5));
       expect(find.byType(DropdownButtonFormField<Category>), findsOneWidget);
       expect(find.text('Add Photo (optional)'), findsOneWidget);
     });
