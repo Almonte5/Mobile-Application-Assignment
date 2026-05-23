@@ -185,13 +185,13 @@ class ListingDetailScreen extends StatelessWidget {
   }
 
   void _contactSeller(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Contact ${listing.sellerName} to arrange a pickup.',
-        ),
-        duration: const Duration(seconds: 4),
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text(
+        'Contact ${listing.sellerName} at ${listing.sellerEmail}',
       ),
-    );
-  }
+      duration: const Duration(seconds: 10),
+    ),
+  );
+}
 }

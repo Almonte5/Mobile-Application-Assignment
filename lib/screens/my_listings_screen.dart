@@ -79,7 +79,7 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
                       Positioned.fill(
                         child: Container(
                           decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.45),
+                            color: Colors.black.withValues(alpha: 0.45),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: const Center(

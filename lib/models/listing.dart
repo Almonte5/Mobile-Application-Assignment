@@ -15,6 +15,7 @@ class Listing {
   final ListingStatus status;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final String sellerEmail;
 
   const Listing({
     required this.id,
@@ -29,6 +30,7 @@ class Listing {
     required this.status,
     required this.createdAt,
     required this.updatedAt,
+    this.sellerEmail = ''
   });
 
   factory Listing.fromFirestore(DocumentSnapshot<Map<String, dynamic>> doc) {
@@ -49,6 +51,7 @@ class Listing {
       status: ListingStatus.fromFirestore(data['status'] as String),
       createdAt: (data['createdAt'] as Timestamp).toDate(),
       updatedAt: (data['updatedAt'] as Timestamp).toDate(),
+      sellerEmail: data['sellerEmail'] as String? ?? '',
     );
   }
 
@@ -65,6 +68,7 @@ class Listing {
       'status': status.firestoreValue,
       'createdAt': Timestamp.fromDate(createdAt),
       'updatedAt': Timestamp.fromDate(updatedAt),
+      'sellerEmail': sellerEmail,
     };
   }
 }

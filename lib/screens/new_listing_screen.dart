@@ -125,11 +125,13 @@ class _NewListingScreenState extends State<NewListingScreen> {
             await _firestore.collection('users').doc(user.uid).get();
         final sellerName =
             userDoc.data()?['displayName'] as String? ?? 'Unknown';
+        final sellerEmail = userDoc.data()?['email'] as String? ?? '';
 
         final listing = Listing(
           id: '',
           sellerId: user.uid,
           sellerName: sellerName,
+          sellerEmail: sellerEmail,
           title: _titleController.text.trim(),
           description: _descriptionController.text.trim(),
           price: double.parse(_priceController.text.trim()),
